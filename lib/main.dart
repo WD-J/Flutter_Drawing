@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:signature/signature.dart';
-
+import 'package:whiteboardkit/whiteboardkit.dart';
 
 void main() => runApp(new MaterialApp(
       home: new HomePage(),
@@ -16,15 +16,40 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<Offset> _points = <Offset>[];
+  List<Offset> _pointsErased = <Offset>[];
   List<Offset> _pointsSaved = <Offset>[];
 
   List<List<Offset>> _pointList = [];
 
   int i = 0;
   int j = 0;
-  String tool = 'Pen';
+  double v = -4;
+  String tool = 'pen';
 
+  toolDegistir(String viewName) {
+    setState(() {
+      tool = viewName;
+    });
+  }
+
+  Color aktifToolRenk(String viewName) {
+    if (tool == viewName) {
+      return Colors.red;
+    } else {
+      return Colors.white;
+    }
+  }
+
+  GestureWhiteboardController controller;
   @override
+  void initState() {
+    controller = new GestureWhiteboardController();
+    controller.onChange().listen((draw) {
+      //do something with it
+    });
+    super.initState();
+  }
+
   Widget build(BuildContext context) {
     return new Scaffold(
       body: Stack(children: <Widget>[
@@ -38,15 +63,22 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ),
-        
         Container(
           child: new GestureDetector(
             onPanUpdate: (DragUpdateDetails details) {
               setState(() {
-                RenderBox object = context.findRenderObject();
-                Offset _localPosition =
-                    object.globalToLocal(details.globalPosition);
-                _points = new List.from(_points)..add(_localPosition);
+                if (tool == 'pen') {
+                  RenderBox object = context.findRenderObject();
+                  Offset _localPosition =
+                      object.globalToLocal(details.globalPosition);
+                  _points = new List.from(_points)..add(_localPosition);
+                } else if (tool == 'eraser') {
+                  RenderBox object = context.findRenderObject();
+                  Offset _localPosition =
+                      object.globalToLocal(details.globalPosition);
+                  _pointsErased = new List.from(_pointsErased)
+                    ..add(_localPosition);
+                }
               });
             },
             onPanEnd: (details) {
@@ -73,22 +105,21 @@ class _HomePageState extends State<HomePage> {
             },
           ),
         ),
-        Positioned(
+        /*Positioned(
           bottom: 20,
           left: 20,
           child: RaisedButton(
             child: Text("Load"),
             onPressed: () {
               setState(() {
-                //_points.addAll(_pointsSaved);
-                _points=[Offset(161.5, 419.4), Offset(161.9, 419.4), null];
+                _points.addAll(_pointsSaved);
                 print(_points);
               });
             },
           ),
-        ),
+        ),*/
         Positioned(
-          bottom: 25,
+          bottom: 35,
           right: 25,
           child: Material(
             borderRadius: BorderRadius.circular(40),
@@ -109,6 +140,66 @@ class _HomePageState extends State<HomePage> {
                         Icons.sync,
                       ),
                       data: IconThemeData(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 35,
+          right: 75,
+          child: Material(
+            borderRadius: BorderRadius.circular(40),
+            elevation: 8,
+            child: SizedBox.fromSize(
+              size: Size(40, 40),
+              child: ClipOval(
+                child: Material(
+                  color: Colors.amber,
+                  elevation: 8,
+                  child: InkWell(
+                    splashColor: Colors.white70,
+                    onTap: () {
+                      tool = 'eraser';
+                      toolDegistir('eraser');
+                    },
+                    child: IconTheme(
+                      child: Icon(
+                        Icons.remove_circle_outline,
+                      ),
+                      data: IconThemeData(color: aktifToolRenk('eraser')),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 35,
+          right: 125,
+          child: Material(
+            borderRadius: BorderRadius.circular(40),
+            elevation: 8,
+            child: SizedBox.fromSize(
+              size: Size(40, 40), // button width and height
+              child: ClipOval(
+                child: Material(
+                  color: Colors.amber,
+                  elevation: 8,
+                  child: InkWell(
+                    splashColor: Colors.white70,
+                    onTap: () {
+                      tool = 'pen';
+                      toolDegistir('pen');
+                    },
+                    child: IconTheme(
+                      child: Icon(
+                        Icons.brush,
+                      ),
+                      data: IconThemeData(color: aktifToolRenk('pen')),
                     ),
                   ),
                 ),
@@ -149,9 +240,5 @@ class Signature extends CustomPainter {
   @override
   bool shouldRepaint(Signature oldDelegate) => oldDelegate.points != points;
 }
-
-final SignatureController _controller = SignatureController(penStrokeWidth: 5, penColor: Colors.amber);
-
-
 
 //[Offset(161.5, 419.4), Offset(161.9, 419.4), null]
