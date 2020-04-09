@@ -1,8 +1,5 @@
-
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
-import 'package:whiteboardkit/whiteboardkit.dart';
 
 void main() => runApp(new MaterialApp(
       home: new HomePage(),
@@ -15,7 +12,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Offset> _points = <Offset>[];
+  List<Offset> _points = <Offset>[]; //This is the list we store the points.
   List<Offset> _pointsSaved = <Offset>[];
 
   List<List<Offset>> _pointList = [];
@@ -25,12 +22,13 @@ class _HomePageState extends State<HomePage> {
   double v = -4;
   String tool = 'pen';
 
+//For switching between tools, 'pen' and 'eraser'.
   toolSwap(String viewName) {
     setState(() {
       tool = viewName;
     });
   }
-
+//Changes Icon color when tool is selected.
   Color activeToolColor(String viewName) {
     if (tool == viewName) {
       return Colors.red;
@@ -38,19 +36,10 @@ class _HomePageState extends State<HomePage> {
       return Colors.white;
     }
   }
-
-  GestureWhiteboardController controller;
-  @override
-  void initState() {
-    controller = new GestureWhiteboardController();
-    controller.onChange().listen((draw) {
-      //do something with it
-    });
-    super.initState();
-  }
+  
 
   Widget build(BuildContext context) {
-    return new Scaffold(
+    return Scaffold(
       body: Stack(children: <Widget>[
         Container(
           width: MediaQuery.of(context).size.width,
@@ -63,18 +52,20 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         Container(
-          child: new GestureDetector(
+          child: GestureDetector(
             onPanUpdate: (DragUpdateDetails details) {
-              if (tool == 'pen') {
+              //Adds the point you are tapping on to the '_points' list as Offset(x,y). Later we draw those points.
+
+              if (tool == 'pen') { 
                 RenderBox object = context.findRenderObject();
                 Offset _localPosition =
                     object.globalToLocal(details.globalPosition);
-                _points = new List.from(_points)..add(_localPosition);
+                _points = List.from(_points)..add(_localPosition);
               } else if (tool == 'eraser') {
                 RenderBox object = context.findRenderObject();
                 Offset _localPosition =
                     object.globalToLocal(details.globalPosition);
-                _points = new List.from(_points)..remove(_localPosition);
+                _points = List.from(_points)..remove(_localPosition);
 
                 //This part is not working.
               }
@@ -91,33 +82,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ),
-        /*Positioned(
-          top: 20,
-          left: 20,
-          child: RaisedButton(
-            child: Text("Save"),
-            onPressed: () {
-              setState(() {
-                _pointsSaved.clear();
-                _pointsSaved.addAll(_points);
-              });
-            },
-          ),
-        ),
-        Positioned(
-          bottom: 20,
-          left: 20,
-          child: RaisedButton(
-            child: Text("Load"),
-            onPressed: () {
-              setState(() {
-                _points.addAll(_pointsSaved);
-                print(_points);
-              });
-            },
-          ),
-        ),*/
-        Positioned(
+        Positioned( // This button clears all drawings.
           bottom: 35,
           right: 25,
           child: Material(
@@ -146,7 +111,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ),
-        Positioned(
+        Positioned( //This button switches tool to eraser.
           bottom: 35,
           right: 75,
           child: Material(
@@ -176,7 +141,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ),
-        Positioned(
+        Positioned( // This button switches tool the 'pen'.
           bottom: 35,
           right: 125,
           child: Material(
@@ -207,29 +172,26 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ]),
-      
     );
   }
 }
 
-class Signature extends CustomPainter {
+class Signature extends CustomPainter { // This is the CustomPainter which is needed for CustomPaint. We describe painting properties inside the 'Paint' in it.
   List<Offset> points;
 
   Signature({this.points});
 
   @override
   void paint(Canvas canvas, Size size) {
-    
     Paint paint = new Paint()
       ..color = Colors.blue
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 7.0;
 
+    //This loop draws all points as lines which gives us the drawing.
     for (int i = 0; i < points.length - 1; i++) {
       if (points[i] != null && points[i + 1] != null) {
         canvas.drawLine(points[i], points[i + 1], paint);
-        
-      
       }
     }
   }
@@ -237,5 +199,3 @@ class Signature extends CustomPainter {
   @override
   bool shouldRepaint(Signature oldDelegate) => oldDelegate.points != points;
 }
-
-
